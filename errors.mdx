@@ -1,0 +1,92 @@
+---
+title: "Error handling"
+description: "How to handle errors from the ShipPeek API."
+---
+
+The ShipPeek API uses standard HTTP status codes and returns structured error responses.
+
+## HTTP status codes
+
+| Code | Meaning |
+|------|---------|
+| `200` | Success |
+| `400` | Bad request -- check your request body or parameters |
+| `401` | Unauthorized -- invalid or missing API token |
+| `402` | Payment required -- no active subscription |
+| `403` | Forbidden -- token lacks permission |
+| `404` | Not found -- resource does not exist |
+| `429` | Too many requests -- rate limit exceeded |
+| `500` | Server error -- something went wrong on our end |
+
+## Error response format
+
+All errors follow a consistent structure:
+
+```json
+{
+  "name": "VALIDATION_ERROR",
+  "requestId": "req_abc123",
+  "message": "originPostalCode is required"
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `name` | Error type identifier |
+| `requestId` | Unique ID for this request (useful for support) |
+| `message` | Human-readable description |
+
+## Carrier-level errors in rate responses
+
+Rate requests return `200` even when individual carriers fail. Check the `status` field on each rate:
+
+```json
+{
+  "id": "29283116d0bfce4472947274",
+  "rates": [
+    {
+      "id": "rate_success",
+      "status": "ok",
+      "total": 123.45,
+      "carrier": "Estes Express Lines",
+      "carrierCode": "exla"
+    },
+    {
+      "id": "rate_failed",
+      "status": "error",
+      "error": "Service not available for this lane",
+      "carrier": "Saia LTL Freight",
+      "carrierCode": "saia"
+    }
+  ]
+}
+```
+
+Rates with `"status": "error"` include an `error` field with the carrier's message. Other carriers in the same response may still return valid rates.
+
+## Common error scenarios
+
+### Missing required fields
+
+```json
+{
+  "name": "VALIDATION_ERROR",
+  "message": "items is required"
+}
+```
+
+Ensure your request includes all required fields. See the [API Reference](/api-reference) for required fields per endpoint.
+
+### Invalid freight class
+
+Only standard NMFC freight classes are accepted. See [Freight classes](/reference/freight-classes) for the full list.
+
+### Carrier not configured
+
+```json
+{
+  "error": "Carrier dohr not found or not configured for this API key"
+}
+```
+
+The carrier exists but is not enabled for your account. Contact support to add carriers.

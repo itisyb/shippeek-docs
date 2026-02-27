@@ -1,0 +1,997 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "ShipPeek API",
+    "version": "1.0.0",
+    "description": "Multi-carrier shipping rate aggregation, booking, and tracking API.",
+    "contact": {
+      "name": "ShipPeek API Support",
+      "email": "yash@shippeek.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "termsOfService": "https://shippeek.com/terms"
+  },
+  "servers": [
+    {
+      "url": "https://api.shippeek.dev",
+      "description": "Sandbox"
+    },
+    {
+      "url": "https://api.shippeek.com",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Rates",
+      "description": "Get shipping rates from multiple carriers"
+    },
+    {
+      "name": "Booking",
+      "description": "Book shipments and manage pickups"
+    },
+    {
+      "name": "Tracking",
+      "description": "Track shipments by PRO or tracking number"
+    },
+    {
+      "name": "Shipments",
+      "description": "Retrieve and search shipment data"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Your ShipPeek API token in the format `client_id.client_secret`."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "message": {
+            "type": "string",
+            "description": "Detailed error description"
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "required": ["name", "requestId", "message"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["VALIDATION_ERROR"]
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "Address": {
+        "type": "object",
+        "properties": {
+          "company": { "type": "string" },
+          "address": { "type": "string" },
+          "address2": { "type": "string" },
+          "city": { "type": "string" },
+          "state": { "type": "string" },
+          "postalCode": { "type": "string" },
+          "country": { "type": "string" }
+        }
+      },
+      "TrackingEvent": {
+        "type": "object",
+        "properties": {
+          "createdDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Full ISO timestamp when the event was recorded"
+          },
+          "eventDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of the tracking event (YYYY-MM-DD)"
+          },
+          "eventTime": {
+            "type": "string",
+            "description": "Time of the event (HH:mm:ss)"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": ["pickup", "in-transit", "arrived", "departed", "delivered", "delayed", "out-for-delivery", "update", "stop-completed", "stop-incomplete"],
+            "description": "Type of tracking event"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Description of the event from the carrier"
+          },
+          "location": {
+            "type": "object",
+            "properties": {
+              "city": { "type": "string" },
+              "state": { "type": "string" },
+              "country": { "type": "string" },
+              "postalCode": { "type": "string" }
+            }
+          }
+        }
+      },
+      "RateItem": {
+        "type": "object",
+        "required": ["weight", "freightClass"],
+        "properties": {
+          "weight": {
+            "type": "number",
+            "description": "Weight in pounds"
+          },
+          "freightClass": {
+            "type": "number",
+            "description": "NMFC freight class (50-500)",
+            "enum": [50, 55, 60, 65, 70, 77.5, 85, 92.5, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500]
+          },
+          "length": {
+            "type": "number",
+            "description": "Length in inches"
+          },
+          "width": {
+            "type": "number",
+            "description": "Width in inches"
+          },
+          "height": {
+            "type": "number",
+            "description": "Height in inches"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Number of handling units",
+            "default": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Item description"
+          },
+          "package": {
+            "type": "string",
+            "description": "Packaging type"
+          },
+          "hazardous": {
+            "type": "boolean",
+            "description": "Whether this item is hazardous",
+            "default": false
+          },
+          "nmfc": {
+            "type": "string",
+            "description": "NMFC code"
+          }
+        }
+      },
+      "Rate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Rate ID used for booking"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ok", "error"],
+            "description": "Whether the rate was successfully retrieved"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["LTL", "Parcel"]
+          },
+          "paymentTerms": {
+            "type": "string",
+            "description": "Payment terms for this rate"
+          },
+          "total": {
+            "type": "number",
+            "description": "Total cost in USD"
+          },
+          "ref": {
+            "type": "string",
+            "description": "Carrier reference number"
+          },
+          "days": {
+            "type": "integer",
+            "description": "Estimated transit days"
+          },
+          "serviceType": {
+            "type": "string",
+            "description": "Service level"
+          },
+          "serviceDescription": {
+            "type": "string"
+          },
+          "time": {
+            "type": "integer",
+            "description": "Time in milliseconds the carrier took to respond"
+          },
+          "carrierId": {
+            "type": "string"
+          },
+          "carrier": {
+            "type": "string",
+            "description": "Carrier name"
+          },
+          "carrierCode": {
+            "type": "string",
+            "description": "Carrier SCAC code"
+          },
+          "charges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "amount": { "type": "number" }
+              }
+            },
+            "description": "Itemized charge breakdown"
+          },
+          "bookUrl": {
+            "type": "string",
+            "description": "URL to book this rate"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/rates": {
+      "post": {
+        "summary": "Get LTL rates",
+        "description": "Get LTL shipping rates from all configured carriers. Returns a list of rates sorted by price. Each rate includes carrier details, transit time, and an itemized charge breakdown.",
+        "operationId": "getLtlRates",
+        "tags": ["Rates"],
+        "parameters": [
+          {
+            "name": "timeout",
+            "in": "query",
+            "description": "How long to wait for rates (seconds). Use `1` to create a quote without waiting for all carriers.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30,
+              "default": 30
+            }
+          },
+          {
+            "name": "carriers",
+            "in": "query",
+            "description": "Comma-separated list of carrier SCAC codes to filter results.",
+            "schema": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["originPostalCode", "destPostalCode", "items"],
+                "properties": {
+                  "pickupDate": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Requested pickup date (YYYY-MM-DD)"
+                  },
+                  "charges": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["arrival notice", "arrival schedule", "liftgate pickup", "liftgate delivery", "inside pickup", "inside delivery", "sort and segregate", "protect from freezing"]
+                    },
+                    "description": "Accessorial charges to include in the rate"
+                  },
+                  "originCompany": { "type": "string", "description": "Company name at pickup" },
+                  "originAddress": { "type": "string", "description": "Street address at pickup" },
+                  "originAddress2": { "type": "string" },
+                  "originCity": { "type": "string" },
+                  "originState": { "type": "string" },
+                  "originPostalCode": { "type": "string", "description": "Pickup ZIP code" },
+                  "originCountry": {
+                    "type": "string",
+                    "enum": ["USA", "CAN"],
+                    "default": "USA"
+                  },
+                  "originType": {
+                    "type": "string",
+                    "enum": ["business dock", "business no dock", "residential", "limited access", "trade show", "construction", "farm", "military", "airport", "place of worship", "school", "mine", "pier"],
+                    "default": "business dock",
+                    "description": "Facility type at pickup location"
+                  },
+                  "destCompany": { "type": "string" },
+                  "destAddress": { "type": "string" },
+                  "destAddress2": { "type": "string" },
+                  "destCity": { "type": "string" },
+                  "destState": { "type": "string" },
+                  "destPostalCode": { "type": "string", "description": "Delivery ZIP code" },
+                  "destCountry": {
+                    "type": "string",
+                    "enum": ["USA", "CAN"],
+                    "default": "USA"
+                  },
+                  "destType": {
+                    "type": "string",
+                    "enum": ["business dock", "business no dock", "residential", "limited access", "trade show", "construction", "farm", "military", "airport", "place of worship", "school", "mine", "pier"],
+                    "default": "business dock",
+                    "description": "Facility type at delivery location"
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/RateItem" },
+                    "description": "Items being shipped"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rates returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Quote ID for retrieving rates later"
+                    },
+                    "rates": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Rate" }
+                    },
+                    "links": {
+                      "type": "object",
+                      "properties": {
+                        "ratesUrl": { "type": "string" },
+                        "spotUrl": { "type": "string" }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "id": "570665116d0bfce422911668",
+                  "rates": [
+                    {
+                      "id": "34575116d0afce4229116467",
+                      "status": "ok",
+                      "mode": "LTL",
+                      "paymentTerms": "Outbound Prepaid",
+                      "total": 123.45,
+                      "ref": "ABC123456",
+                      "days": 3,
+                      "serviceType": "Standard",
+                      "serviceDescription": "Standard",
+                      "time": 530,
+                      "carrierId": "84528496d0afce4229282716",
+                      "carrier": "Estes Express Lines",
+                      "carrierCode": "exla",
+                      "charges": [
+                        { "name": "linehaul", "amount": 1000 },
+                        { "name": "discount", "amount": -900 },
+                        { "name": "fuel", "amount": 23.45 }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or missing API key" },
+          "429": { "description": "Rate limit exceeded (30 requests/minute)" }
+        }
+      }
+    },
+    "/rates/parcel": {
+      "post": {
+        "summary": "Get parcel rates",
+        "description": "Get parcel shipping rates from UPS and FedEx. Returns service options with pricing and transit times.",
+        "operationId": "getParcelRates",
+        "tags": ["Rates"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["originPostalCode", "destPostalCode", "items"],
+                "properties": {
+                  "pickupDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "charges": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["signature required", "adult signature required", "indirect signature required"]
+                    },
+                    "description": "Parcel-specific accessorial charges"
+                  },
+                  "originPostalCode": { "type": "string" },
+                  "originCountry": {
+                    "type": "string",
+                    "enum": ["USA", "CAN"],
+                    "default": "USA"
+                  },
+                  "originType": {
+                    "type": "string",
+                    "enum": ["business dock", "business no dock", "residential"],
+                    "default": "business dock"
+                  },
+                  "destPostalCode": { "type": "string" },
+                  "destCountry": {
+                    "type": "string",
+                    "enum": ["USA", "CAN"],
+                    "default": "USA"
+                  },
+                  "destType": {
+                    "type": "string",
+                    "enum": ["business dock", "business no dock", "residential"],
+                    "default": "business dock"
+                  },
+                  "schedulePickup": {
+                    "type": "boolean",
+                    "description": "Whether to include pickup scheduling with the booking",
+                    "default": false
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["weight"],
+                      "properties": {
+                        "weight": { "type": "number", "description": "Weight in pounds" },
+                        "length": { "type": "number", "description": "Length in inches" },
+                        "width": { "type": "number", "description": "Width in inches" },
+                        "height": { "type": "number", "description": "Height in inches" },
+                        "quantity": { "type": "integer", "default": 1 },
+                        "package": {
+                          "type": "string",
+                          "description": "Packaging type (Custom, or carrier-specific like FedEx-pak, UPS-letter)",
+                          "default": "Custom"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Parcel rates returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "rates": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Rate" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or missing API key" },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/rates/ltl/stream": {
+      "post": {
+        "summary": "Stream LTL rates (SSE)",
+        "description": "Stream LTL rates via Server-Sent Events. Rates arrive as they are returned from each carrier, rather than waiting for all carriers to respond. The request body is the same as `POST /rates`.",
+        "operationId": "streamLtlRates",
+        "tags": ["Rates"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["originPostalCode", "destPostalCode", "items"],
+                "properties": {
+                  "originPostalCode": { "type": "string" },
+                  "destPostalCode": { "type": "string" },
+                  "items": {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/RateItem" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SSE stream of rate events",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Each event is a JSON-encoded rate object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/book": {
+      "post": {
+        "summary": "Book an LTL shipment",
+        "description": "Book a shipment using a rate ID from a previous rate request. Returns a BOL, PRO number, and optionally schedules a pickup with the carrier.",
+        "operationId": "bookLtlShipment",
+        "tags": ["Booking"],
+        "parameters": [
+          {
+            "name": "labelSize",
+            "in": "query",
+            "description": "Label size for the shipment",
+            "schema": {
+              "type": "string",
+              "default": "4x6",
+              "enum": ["2.25x4", "3x4", "3x5", "3.5x5", "4x1", "4x2", "4x3.3", "4x6", "4x8", "5.5x8.5", "8.5x11"]
+            }
+          },
+          {
+            "name": "labelCount",
+            "in": "query",
+            "description": "Number of labels per handling unit",
+            "schema": {
+              "type": "integer",
+              "enum": [1, 2, 4]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id", "rateId"],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Quote ID from the rate response"
+                  },
+                  "rateId": {
+                    "type": "string",
+                    "description": "Rate ID of the selected rate"
+                  },
+                  "schedulePickup": {
+                    "type": "boolean",
+                    "description": "Whether to schedule a carrier pickup",
+                    "default": false
+                  },
+                  "shareShipmentEmails": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "email" },
+                    "description": "Email addresses to share shipment details with"
+                  },
+                  "bolNum": {
+                    "type": "string",
+                    "description": "Custom BOL number. Auto-generated if not provided."
+                  },
+                  "originCompany": { "type": "string" },
+                  "originAddress": { "type": "string" },
+                  "originAddress2": { "type": "string" },
+                  "originContactName": { "type": "string" },
+                  "originContactPhone": { "type": "string" },
+                  "originContactEmail": { "type": "string", "format": "email" },
+                  "originReferenceNumber": { "type": "string", "description": "Reference number (e.g. order number)" },
+                  "originInstructions": { "type": "string" },
+                  "originDockHoursOpen": { "type": "string", "description": "Dock open time (e.g. 9:00 AM)" },
+                  "originDockHoursClose": { "type": "string", "description": "Dock close time (e.g. 5:00 PM)" },
+                  "destCompany": { "type": "string" },
+                  "destAddress": { "type": "string" },
+                  "destAddress2": { "type": "string" },
+                  "destContactName": { "type": "string" },
+                  "destContactPhone": { "type": "string" },
+                  "destContactEmail": { "type": "string", "format": "email" },
+                  "destReferenceNumber": { "type": "string", "description": "Reference number (e.g. PO number)" },
+                  "destInstructions": { "type": "string" },
+                  "destDockHoursOpen": { "type": "string" },
+                  "destDockHoursClose": { "type": "string" },
+                  "emergencyName": { "type": "string", "description": "Required for hazardous shipments" },
+                  "emergencyPhone": { "type": "string", "description": "Required for hazardous shipments" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Shipment booked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "description": "ShipPeek shipment ID" },
+                    "createdDate": { "type": "string", "format": "date-time" },
+                    "status": { "type": "string" },
+                    "direction": { "type": "string", "enum": ["outbound", "inbound", "third-party"] },
+                    "dispatch": {
+                      "type": "object",
+                      "properties": {
+                        "carrierId": { "type": "string" },
+                        "carrier": { "type": "string" },
+                        "carrierCode": { "type": "string" },
+                        "schedulePickup": { "type": "boolean" },
+                        "bolStatus": { "type": "string" },
+                        "pickupNum": { "type": "string" },
+                        "proNum": { "type": "string" },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "itemId": { "type": "string" },
+                              "index": { "type": "integer" },
+                              "trackingNum": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad request" },
+          "401": { "description": "Authentication failed" },
+          "402": { "description": "No active ShipPeek subscription" },
+          "429": { "description": "Rate limit exceeded (20 requests/minute)" },
+          "500": { "description": "Carrier booking error" }
+        }
+      }
+    },
+    "/book/parcel": {
+      "post": {
+        "summary": "Book a parcel shipment",
+        "description": "Book a parcel shipment using a rate ID from a parcel rate request. Returns tracking numbers and labels.",
+        "operationId": "bookParcelShipment",
+        "tags": ["Booking"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id", "rateId"],
+                "properties": {
+                  "id": { "type": "string", "description": "Quote ID from the parcel rate response" },
+                  "rateId": { "type": "string", "description": "Rate ID of the selected parcel rate" },
+                  "originCompany": { "type": "string" },
+                  "originAddress": { "type": "string" },
+                  "originContactName": { "type": "string" },
+                  "originContactPhone": { "type": "string" },
+                  "originContactEmail": { "type": "string", "format": "email" },
+                  "destCompany": { "type": "string" },
+                  "destAddress": { "type": "string" },
+                  "destContactName": { "type": "string" },
+                  "destContactPhone": { "type": "string" },
+                  "destContactEmail": { "type": "string", "format": "email" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Parcel shipment booked successfully" },
+          "400": { "description": "Bad request" },
+          "401": { "description": "Authentication failed" },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/book/cancel": {
+      "post": {
+        "summary": "Cancel a booking",
+        "description": "Cancel a booking or pickup by booking ID or pickup number.",
+        "operationId": "cancelBooking",
+        "tags": ["Booking"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bookingId": { "type": "string", "description": "The booking ID to cancel" },
+                  "pickupNumber": { "type": "string", "description": "The pickup number to cancel" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Booking cancelled successfully" },
+          "400": { "description": "Bad request" },
+          "404": { "description": "Booking not found" }
+        }
+      }
+    },
+    "/track/{trackingNumber}": {
+      "get": {
+        "summary": "Track by PRO/tracking number",
+        "description": "Track a shipment using the carrier's PRO number or tracking number. Returns real-time tracking events from the carrier.",
+        "operationId": "trackByNumber",
+        "tags": ["Tracking"],
+        "parameters": [
+          {
+            "name": "trackingNumber",
+            "in": "path",
+            "required": true,
+            "description": "PRO number or tracking number",
+            "schema": { "type": "string" },
+            "examples": {
+              "dohrn": { "value": "88689418", "summary": "Dohrn PRO" },
+              "ups": { "value": "1ZJ734V30334610288", "summary": "UPS tracking" },
+              "estes": { "value": "164-1956299", "summary": "Estes PRO" }
+            }
+          },
+          {
+            "name": "carrier",
+            "in": "query",
+            "required": true,
+            "description": "Carrier SCAC code",
+            "schema": {
+              "type": "string",
+              "enum": ["aact", "xpol", "dohr", "upgf", "exla", "odfl", "saia", "mgul", "sutn", "ccfs", "fxfe", "ups"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tracking events returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TrackingEvent" }
+                },
+                "example": [
+                  {
+                    "createdDate": "2026-01-08T02:13:00.000Z",
+                    "eventDate": "2026-01-08",
+                    "eventTime": "02:13:00",
+                    "eventType": "in-transit",
+                    "summary": "Trailer Arrived",
+                    "location": { "city": "Rock Island", "state": "IL", "country": "US", "postalCode": "61201" }
+                  },
+                  {
+                    "createdDate": "2026-01-07T16:01:00.000Z",
+                    "eventDate": "2026-01-07",
+                    "eventTime": "16:01:00",
+                    "eventType": "pickup",
+                    "summary": "Picked Up",
+                    "location": { "city": "Kansas City", "state": "MO", "country": "US", "postalCode": "64101" }
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Missing carrier parameter",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": { "error": "Carrier parameter is required" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or missing API key" },
+          "404": { "description": "Carrier not configured or shipment not found" },
+          "500": { "description": "Carrier API error" }
+        }
+      }
+    },
+    "/shipments": {
+      "get": {
+        "summary": "Search shipments",
+        "description": "Search and filter shipments with pagination. Supports filtering by status, mode, carrier, dates, and free-text search.",
+        "operationId": "searchShipments",
+        "tags": ["Shipments"],
+        "parameters": [
+          {
+            "name": "continuationToken",
+            "in": "query",
+            "description": "Pagination token from a previous response",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search by PRO, tracking number, reference, BOL, company, city, or postal code",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by shipment status",
+            "schema": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["pending", "awarded", "confirmed", "picked-up", "delivered", "canceled"] }
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "description": "Filter by transport mode",
+            "schema": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["ltl", "parcel", "truckload"] }
+            }
+          },
+          {
+            "name": "pickupDateStart",
+            "in": "query",
+            "description": "Start of pickup date range (YYYY-MM-DD)",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "pickupDateEnd",
+            "in": "query",
+            "description": "End of pickup date range (YYYY-MM-DD)",
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shipments returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "shipments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "createdDate": { "type": "string", "format": "date-time" },
+                          "status": { "type": "string" },
+                          "origin": { "$ref": "#/components/schemas/Address" },
+                          "destination": { "$ref": "#/components/schemas/Address" },
+                          "carrier": {
+                            "type": "object",
+                            "properties": {
+                              "name": { "type": "string" },
+                              "scac": { "type": "string" }
+                            }
+                          },
+                          "cost": {
+                            "type": "object",
+                            "properties": {
+                              "total": { "type": "number" },
+                              "currency": { "type": "string" }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "continuationToken": { "type": "string", "description": "Token to fetch the next page" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid filter parameters" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/shipments/{shipmentId}": {
+      "get": {
+        "summary": "Get shipment details",
+        "description": "Retrieve full details for a specific shipment, including origin, destination, items, tracking, documents, and cost breakdown.",
+        "operationId": "getShipment",
+        "tags": ["Shipments"],
+        "parameters": [
+          {
+            "name": "shipmentId",
+            "in": "path",
+            "required": true,
+            "description": "Shipment ID",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shipment details returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "createdDate": { "type": "string", "format": "date-time" },
+                    "status": { "type": "string" },
+                    "origin": { "$ref": "#/components/schemas/Address" },
+                    "destination": { "$ref": "#/components/schemas/Address" },
+                    "items": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/RateItem" }
+                    },
+                    "tracking": {
+                      "type": "object",
+                      "properties": {
+                        "status": { "type": "string" },
+                        "trackingNumber": { "type": "string" },
+                        "pickupDate": { "type": "string", "format": "date-time" },
+                        "deliveryDate": { "type": "string", "format": "date-time" }
+                      }
+                    },
+                    "documents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": { "type": "string", "enum": ["bol", "label", "invoice", "pod"] },
+                          "url": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Shipment not found" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+---
+title: "Packaging types"
+description: "Packaging options for LTL and parcel shipments."
+---
+
+Use these values in the `package` field of rate request items.
+
+## LTL packaging
+
+| Type | Description |
+|------|-------------|
+| `Pallets_48x48` | Standard 48x48 pallet |
+| `Pallets_48x40` | Standard 48x40 pallet (most common) |
+| `Pallets_60x48` | Oversized 60x48 pallet |
+| `Pallets_other` | Non-standard pallet |
+| `Bags` | Bags |
+| `Bales` | Bales |
+| `Baskets` | Baskets |
+| `Boxes` | Boxes |
+| `Bundles` | Bundles |
+| `Carpets` | Carpet rolls |
+| `Cases` | Cases |
+| `Coils` | Coils |
+| `Crates` | Crates |
+| `Cylinders` | Cylinders |
+| `Drums` | Drums |
+| `Jerricans` | Jerricans |
+| `Pails` | Pails |
+| `Pieces` | Individual pieces |
+| `Reels` | Reels |
+| `Rolls` | Rolls |
+| `Totes` | Totes |
+| `TubesPipes` | Tubes or pipes |
+| `Unit` | Generic unit |
+
+## Parcel packaging
+
+### Your own packaging
+
+| Type | Description |
+|------|-------------|
+| `Custom` | Your own box or packaging (default) |
+
+### Carrier-specific packaging
+
+Using carrier-specific packaging limits the returned rates to that carrier only.
+
+#### FedEx packaging
+
+| Type | Description |
+|------|-------------|
+| `FedEx-envelope` | FedEx Envelope |
+| `FedEx-pak` | FedEx Pak |
+| `FedEx-box` | FedEx Box |
+| `FedEx-small-box` | FedEx Small Box |
+| `FedEx-medium-box` | FedEx Medium Box |
+| `FedEx-large-box` | FedEx Large Box |
+| `FedEx-extra-large-box` | FedEx Extra Large Box |
+| `FedEx-tube` | FedEx Tube |
+| `FedEx-10kg-box` | FedEx 10kg Box |
+| `FedEx-25kg-box` | FedEx 25kg Box |
+
+#### UPS packaging
+
+| Type | Description |
+|------|-------------|
+| `UPS-letter` | UPS Letter |
+| `UPS-tube` | UPS Tube |
+| `UPS-pak` | UPS Pak |
+| `UPS-express-box-small` | UPS Express Small Box |
+| `UPS-express-box-medium` | UPS Express Medium Box |
+| `UPS-express-box-large` | UPS Express Large Box |
+| `UPS-10kg-box` | UPS 10kg Box |
+| `UPS-25kg-box` | UPS 25kg Box |
+
+<Note>
+  When you select a carrier-specific packaging type, only that carrier's rates are returned. Use `Custom` to get rates from all parcel carriers.
+</Note>

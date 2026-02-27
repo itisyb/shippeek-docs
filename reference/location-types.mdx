@@ -1,0 +1,44 @@
+---
+title: "Location types"
+description: "Facility types for origin and destination locations."
+---
+
+Use these values in the `originType` and `destType` fields. The location type affects accessorial charges -- for example, residential locations incur a residential delivery surcharge automatically.
+
+## Available types
+
+| Type | Description |
+|------|-------------|
+| `business dock` | Commercial location with a loading dock (default) |
+| `business no dock` | Commercial location without a loading dock |
+| `residential` | Home or residential address |
+| `limited access` | Location with restricted access |
+| `trade show` | Trade show or exhibition venue |
+| `construction` | Active construction site |
+| `farm` | Agricultural or farm location |
+| `military` | Military base or installation |
+| `airport` | Airport facility |
+| `place of worship` | Church, mosque, temple, etc. |
+| `school` | Educational institution |
+| `mine` | Mining operation |
+| `pier` | Dock or pier facility |
+
+## How location types affect pricing
+
+Non-standard locations (anything other than `business dock`) typically incur additional accessorial charges from carriers. These charges are applied automatically based on the location type -- you do not need to add them to the `charges` array separately.
+
+Common surcharges:
+- **Residential** -- Residential pickup/delivery fee
+- **Limited access** -- Limited access surcharge
+- **Liftgate** -- Often required at locations without a dock (but must be requested separately via accessorials)
+
+## Example
+
+```json
+{
+  "originPostalCode": "60601",
+  "originType": "business dock",
+  "destPostalCode": "90210",
+  "destType": "residential"
+}
+```

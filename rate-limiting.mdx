@@ -1,0 +1,49 @@
+---
+title: "Rate limiting"
+description: "Understand ShipPeek API rate limits and how to handle them."
+---
+
+The ShipPeek API enforces rate limits per endpoint to ensure reliability for all users.
+
+## Limits by endpoint
+
+| Endpoint | Limit |
+|----------|-------|
+| Authentication | 5 requests/minute |
+| Rate shopping (`/rates`) | 30 requests/minute |
+| Booking (`/book`) | 20 requests/minute |
+| Tracking (`/track`) | 120 requests/minute |
+
+## Response headers
+
+Every response includes rate limit headers:
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests allowed per window |
+| `X-RateLimit-Remaining` | Requests remaining in the current window |
+| `X-RateLimit-Reset` | Seconds until the limit resets |
+
+## Handling rate limits
+
+When you exceed the limit, the API returns `429 Too Many Requests`. Use the `X-RateLimit-Reset` header to determine when to retry.
+
+```javascript
+async function fetchWithRetry(url, options) {
+  const response = await fetch(url, options);
+
+  if (response.status === 429) {
+    const resetSeconds = parseInt(response.headers.get('X-RateLimit-Reset'), 10);
+    await new Promise(resolve => setTimeout(resolve, resetSeconds * 1000));
+    return fetch(url, options);
+  }
+
+  return response;
+}
+```
+
+## Recommendations
+
+- **Cache rate quotes** -- Use the quote ID to retrieve rates later instead of making repeated rate requests.
+- **Use streaming** -- The `/rates/ltl/stream` endpoint returns rates as they arrive via SSE, reducing the need for polling.
+- **Batch operations** -- Group related items into a single rate request rather than making separate requests per item.

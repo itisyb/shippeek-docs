@@ -1,0 +1,217 @@
+---
+title: "Rate shopping examples"
+description: "Code examples for getting LTL and parcel shipping rates."
+---
+
+## Basic LTL rate request
+
+Get rates for a single pallet from Chicago to Los Angeles:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.shippeek.com/rates \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "originPostalCode": "60601",
+    "originType": "business dock",
+    "destPostalCode": "90210",
+    "destType": "business dock",
+    "items": [
+      {
+        "weight": 500,
+        "freightClass": 70,
+        "length": 48,
+        "width": 40,
+        "height": 48,
+        "quantity": 1,
+        "package": "Pallets_48x40"
+      }
+    ]
+  }'
+```
+
+```javascript Node.js
+const response = await fetch('https://api.shippeek.com/rates', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${process.env.SHIPPEEK_API_TOKEN}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    originPostalCode: '60601',
+    originType: 'business dock',
+    destPostalCode: '90210',
+    destType: 'business dock',
+    items: [
+      {
+        weight: 500,
+        freightClass: 70,
+        length: 48,
+        width: 40,
+        height: 48,
+        quantity: 1,
+        package: 'Pallets_48x40',
+      },
+    ],
+  }),
+});
+
+const { rates } = await response.json();
+const cheapest = rates.filter(r => r.status === 'ok').sort((a, b) => a.total - b.total)[0];
+console.log(`Cheapest: ${cheapest.carrier} - $${cheapest.total} (${cheapest.days} days)`);
+```
+
+```python Python
+import requests
+import os
+
+response = requests.post(
+    'https://api.shippeek.com/rates',
+    headers={
+        'Authorization': f'Bearer {os.environ["SHIPPEEK_API_TOKEN"]}',
+        'Content-Type': 'application/json',
+    },
+    json={
+        'originPostalCode': '60601',
+        'originType': 'business dock',
+        'destPostalCode': '90210',
+        'destType': 'business dock',
+        'items': [
+            {
+                'weight': 500,
+                'freightClass': 70,
+                'length': 48,
+                'width': 40,
+                'height': 48,
+                'quantity': 1,
+                'package': 'Pallets_48x40',
+            }
+        ],
+    },
+)
+
+data = response.json()
+ok_rates = [r for r in data['rates'] if r['status'] == 'ok']
+cheapest = min(ok_rates, key=lambda r: r['total'])
+print(f"Cheapest: {cheapest['carrier']} - ${cheapest['total']} ({cheapest['days']} days)")
+```
+</CodeGroup>
+
+## LTL with accessorials
+
+Add liftgate delivery and arrival notification:
+
+```bash
+curl -X POST https://api.shippeek.com/rates \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "originPostalCode": "60601",
+    "originType": "business dock",
+    "destPostalCode": "90210",
+    "destType": "residential",
+    "charges": ["liftgate delivery", "arrival notice"],
+    "items": [
+      {
+        "weight": 300,
+        "freightClass": 85,
+        "length": 48,
+        "width": 40,
+        "height": 36,
+        "quantity": 1,
+        "package": "Pallets_48x40"
+      }
+    ]
+  }'
+```
+
+<Note>
+  Residential delivery charges are automatically applied when `destType` is set to `residential`. You do not need to add a separate accessorial for it.
+</Note>
+
+## Parcel rate request
+
+Get UPS and FedEx parcel rates for a single package:
+
+```bash
+curl -X POST https://api.shippeek.com/rates/parcel \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "originPostalCode": "60601",
+    "originType": "business dock",
+    "destPostalCode": "90210",
+    "destType": "residential",
+    "charges": ["signature required"],
+    "items": [
+      {
+        "weight": 15,
+        "length": 12,
+        "width": 10,
+        "height": 8,
+        "quantity": 1,
+        "package": "Custom"
+      }
+    ]
+  }'
+```
+
+## Filter by carrier
+
+Request rates from specific carriers only:
+
+```bash
+curl -X POST "https://api.shippeek.com/rates?carriers=exla,saia,odfl" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "originPostalCode": "60601",
+    "destPostalCode": "90210",
+    "items": [
+      {
+        "weight": 500,
+        "freightClass": 70,
+        "quantity": 1
+      }
+    ]
+  }'
+```
+
+## Streaming rates (SSE)
+
+Use the streaming endpoint to receive rates as each carrier responds, instead of waiting for all carriers:
+
+```javascript
+const response = await fetch('https://api.shippeek.com/rates/ltl/stream', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${process.env.SHIPPEEK_API_TOKEN}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    originPostalCode: '60601',
+    destPostalCode: '90210',
+    items: [{ weight: 500, freightClass: 70 }],
+  }),
+});
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  const text = decoder.decode(value);
+  // Each SSE event contains a JSON-encoded rate
+  const lines = text.split('\n').filter(line => line.startsWith('data: '));
+
+  for (const line of lines) {
+    const rate = JSON.parse(line.slice(6));
+    console.log(`${rate.carrier}: $${rate.total}`);
+  }
+}
+```
+
+Streaming is useful when building real-time UIs that show rates as they arrive.

@@ -1,0 +1,54 @@
+---
+title: "Accessorials"
+description: "Accessorial charges available for LTL and parcel shipments."
+---
+
+Accessorials are additional services applied to a shipment. Pass them in the `charges` array of your rate request.
+
+## LTL accessorials
+
+| Charge | Description |
+|--------|-------------|
+| `arrival notice` | Destination wants notification before delivery |
+| `arrival schedule` | Destination requires a delivery appointment |
+| `liftgate pickup` | Liftgate needed at the pickup location |
+| `liftgate delivery` | Liftgate needed at the delivery location |
+| `inside pickup` | Carrier brings freight inside the pickup facility |
+| `inside delivery` | Carrier brings freight inside the delivery facility |
+| `sort and segregate` | Carrier sorts and separates items at delivery |
+| `protect from freezing` | Temperature-controlled transit to prevent freezing |
+
+<Warning>
+  `arrival notice` and `arrival schedule` are mutually exclusive. Include one or the other, not both.
+</Warning>
+
+### Facility type charges
+
+Location-based charges (residential delivery, trade show, limited access, etc.) are applied **automatically** based on the `originType` and `destType` fields. You do not need to list them as accessorials.
+
+For example, setting `destType: "residential"` automatically adds the residential delivery surcharge.
+
+## Parcel accessorials
+
+| Charge | Description |
+|--------|-------------|
+| `signature required` | Requires a signature at delivery |
+| `adult signature required` | Requires an adult signature at delivery |
+| `indirect signature required` | Allows an indirect signature (FedEx only, residential destinations only) |
+
+## Example
+
+```json
+{
+  "originPostalCode": "60601",
+  "destPostalCode": "90210",
+  "destType": "residential",
+  "charges": ["liftgate delivery", "arrival notice"],
+  "items": [
+    {
+      "weight": 300,
+      "freightClass": 85
+    }
+  ]
+}
+```

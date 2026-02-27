@@ -1,0 +1,71 @@
+---
+title: "Introduction"
+description: "ShipPeek is a multi-carrier shipping API for LTL and parcel rate shopping, booking, and tracking."
+---
+
+ShipPeek aggregates real-time freight rates from multiple LTL and parcel carriers into a single API call. Get rates, book shipments, generate BOLs and labels, schedule pickups, and track deliveries -- all through one integration.
+
+## What you can do with ShipPeek
+
+<CardGroup cols={2}>
+  <Card title="Rate shopping" icon="magnifying-glass-dollar">
+    Compare rates from 14+ LTL carriers and UPS/FedEx parcel in a single request. Rates include transit times, charge breakdowns, and service levels.
+  </Card>
+  <Card title="Book shipments" icon="file-signature">
+    Book LTL or parcel shipments directly through the API. Receive BOLs, shipping labels, PRO numbers, and pickup confirmations.
+  </Card>
+  <Card title="Track shipments" icon="location-dot">
+    Track any shipment by PRO number or tracking number across all supported carriers with normalized event data.
+  </Card>
+  <Card title="Manage shipments" icon="table-list">
+    Search, filter, and retrieve shipment history. Access documents, cost breakdowns, and delivery status.
+  </Card>
+</CardGroup>
+
+## Environments
+
+ShipPeek provides two environments:
+
+| Environment | Base URL | Purpose |
+|------------|----------|---------|
+| **Production** | `https://api.shippeek.com` | Live shipments and real carrier rates |
+| **Sandbox** | `https://api.shippeek.dev` | Testing and development |
+
+Sandbox access is granted automatically 24 hours after your ShipPeek account is set up and carriers have been added.
+
+## Supported carriers
+
+### LTL carriers
+
+| Carrier | SCAC code |
+|---------|-----------|
+| AAA Cooper / MME | `aact` |
+| Dohrn Transfer | `dohr` |
+| Dugan Truck Line | `dugn` |
+| Estes Express Lines | `exla` |
+| FedEx Freight | `fxfe` |
+| Magnum LTL | `mgul` |
+| Old Dominion (ODFL) | `odfl` |
+| Rossi Transportation | `rosi` |
+| Saia LTL Freight | `saia` |
+| Sutton Transport | `sutn` |
+| XPO Logistics | `xpol` |
+| CCFS | `ccfs` |
+
+### Parcel carriers
+
+| Carrier | SCAC code |
+|---------|-----------|
+| UPS | `ups` / `upgf` |
+| FedEx | `fedex_parcel` |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Make your first API request in under 5 minutes.
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Learn how to authenticate your API requests.
+  </Card>
+</CardGroup>

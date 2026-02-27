@@ -1,0 +1,63 @@
+---
+title: "Authentication"
+description: "How to authenticate your ShipPeek API requests."
+---
+
+All API requests require a Bearer token in the `Authorization` header.
+
+## API token format
+
+Your API token combines your client ID and client secret with a period separator:
+
+```
+client_id.client_secret
+```
+
+You can find both values in your ShipPeek dashboard after signing up.
+
+## Making authenticated requests
+
+Include the token in the `Authorization` header of every request:
+
+```bash
+curl -X POST https://api.shippeek.com/rates \
+  -H "Authorization: Bearer YOUR_CLIENT_ID.YOUR_CLIENT_SECRET" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{ ... }'
+```
+
+## Required headers
+
+| Header | Value | Required |
+|--------|-------|----------|
+| `Authorization` | `Bearer <your_token>` | All requests |
+| `Content-Type` | `application/json` | Requests with a body |
+| `Accept` | `application/json` | Recommended |
+
+## Error responses
+
+If authentication fails, the API returns one of these responses:
+
+| Status | Meaning |
+|--------|---------|
+| `401 Unauthorized` | Missing or invalid API token |
+| `402 Payment Required` | No active ShipPeek subscription |
+| `403 Forbidden` | Token valid but lacks permission for this resource |
+
+Example error response:
+
+```json
+{
+  "name": "UNAUTHORIZED",
+  "requestId": "req_abc123",
+  "message": "Invalid API credentials"
+}
+```
+
+## Security recommendations
+
+- Store your API credentials in environment variables, not in source code.
+- Use the sandbox environment (`api.shippeek.dev`) for development and testing.
+- Rotate your credentials immediately if you suspect they have been compromised.
+- Use separate API keys for different environments and applications.

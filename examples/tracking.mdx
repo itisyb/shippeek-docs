@@ -1,0 +1,97 @@
+---
+title: "Tracking examples"
+description: "Code examples for tracking shipments by PRO number or tracking number."
+---
+
+## Track by PRO number
+
+Track an LTL shipment using the carrier's PRO number:
+
+<CodeGroup>
+```bash cURL
+curl "https://api.shippeek.com/track/88689418?carrier=dohr" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```javascript Node.js
+const proNumber = '88689418';
+const carrier = 'dohr';
+
+const response = await fetch(
+  `https://api.shippeek.com/track/${proNumber}?carrier=${carrier}`,
+  {
+    headers: {
+      'Authorization': `Bearer ${process.env.SHIPPEEK_API_TOKEN}`,
+    },
+  }
+);
+
+const events = await response.json();
+
+for (const event of events) {
+  console.log(`${event.eventDate} ${event.eventTime} - ${event.eventType}: ${event.summary}`);
+  if (event.location) {
+    console.log(`  Location: ${event.location.city}, ${event.location.state}`);
+  }
+}
+```
+
+```python Python
+import requests
+import os
+
+pro_number = '88689418'
+carrier = 'dohr'
+
+response = requests.get(
+    f'https://api.shippeek.com/track/{pro_number}',
+    params={'carrier': carrier},
+    headers={
+        'Authorization': f'Bearer {os.environ["SHIPPEEK_API_TOKEN"]}',
+    },
+)
+
+events = response.json()
+for event in events:
+    location = event.get('location', {})
+    city = f"{location.get('city', '')}, {location.get('state', '')}" if location else 'Unknown'
+    print(f"{event['eventDate']} - {event['eventType']}: {event['summary']} ({city})")
+```
+</CodeGroup>
+
+## Track a UPS shipment
+
+```bash
+curl "https://api.shippeek.com/track/1ZJ734V30334610288?carrier=upgf" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+## Tracking event types
+
+Events are normalized across carriers into these types:
+
+| Event type | Description |
+|-----------|-------------|
+| `pickup` | Shipment picked up by carrier |
+| `in-transit` | Shipment moving between facilities |
+| `arrived` | Arrived at a carrier facility |
+| `departed` | Left a carrier facility |
+| `out-for-delivery` | On the delivery truck |
+| `delivered` | Delivered to destination |
+| `delayed` | Shipment delayed |
+| `update` | General status update |
+
+## Supported carriers for tracking
+
+| Carrier | SCAC | PRO format example |
+|---------|------|--------------------|
+| AAA Cooper | `aact` | `58020648-0` |
+| XPO Logistics | `xpol` | `619-344051` |
+| Dohrn Transfer | `dohr` | `88689418` |
+| UPS | `upgf` | `1ZJ734V30334610288` |
+| Estes Express | `exla` | `164-1956299` |
+| Old Dominion | `odfl` | `123456789` |
+| Saia | `saia` | `123456789` |
+| Magnum | `mgul` | `7799405` |
+| Sutton | `sutn` | `12345` |
+| CCFS | `ccfs` | `12345` |

@@ -1,0 +1,72 @@
+---
+title: "WordPress / WooCommerce plugin"
+description: "Install and configure the ShipPeek plugin for WooCommerce shipping rates."
+---
+
+The ShipPeek WordPress plugin integrates real-time LTL and parcel shipping rates directly into your WooCommerce checkout.
+
+## Features
+
+- Real-time rate shopping at checkout from all your configured carriers
+- Automatic freight class and packaging detection based on product settings
+- Configurable origin location and facility type
+- Support for both LTL and parcel rates
+- Compatible with WooCommerce shipping zones
+
+## Installation
+
+<Steps>
+  <Step title="Download the plugin">
+    Download the latest ShipPeek plugin ZIP from your ShipPeek dashboard or contact support for the file.
+  </Step>
+  <Step title="Upload to WordPress">
+    In your WordPress admin panel, go to **Plugins > Add New > Upload Plugin**. Select the ZIP file and click **Install Now**.
+  </Step>
+  <Step title="Activate the plugin">
+    After installation, click **Activate Plugin**.
+  </Step>
+  <Step title="Configure API credentials">
+    Go to **WooCommerce > Settings > Shipping > ShipPeek**. Enter your API credentials:
+
+    - **Client ID** -- Your ShipPeek client ID
+    - **Client Secret** -- Your ShipPeek client secret
+    - **Environment** -- Select Sandbox for testing or Production for live rates
+  </Step>
+  <Step title="Set your origin location">
+    Configure your shipping origin:
+
+    - **Origin postal code** -- Your warehouse/fulfillment center ZIP code
+    - **Origin type** -- Facility type (e.g., `business dock`, `business no dock`)
+    - **Origin country** -- USA or CAN
+  </Step>
+</Steps>
+
+## Product configuration
+
+For accurate LTL rates, configure each WooCommerce product with shipping dimensions:
+
+- **Weight** -- Product weight in pounds
+- **Dimensions** -- Length, width, height in inches
+- **Freight class** -- NMFC freight class (use the ShipPeek custom field or a compatible plugin)
+- **Packaging type** -- How the product is shipped (pallet, box, etc.)
+
+## Shipping zones
+
+The ShipPeek plugin works with WooCommerce shipping zones. Add ShipPeek as a shipping method in any zone where you want to display carrier rates at checkout.
+
+## Troubleshooting
+
+### No rates displayed at checkout
+
+- Verify your API credentials are correct in the ShipPeek settings
+- Check that the destination ZIP code is valid
+- Ensure products in the cart have weight and dimensions configured
+- Confirm your ShipPeek account has active carriers
+
+### Rates are slow to load
+
+The plugin queries multiple carriers in real-time. Consider using the `timeout` setting to limit how long to wait for slower carriers. A timeout of 10-15 seconds is recommended for checkout.
+
+### Plugin version
+
+The current plugin version is **v1.6.5**. Check for updates in your ShipPeek dashboard.

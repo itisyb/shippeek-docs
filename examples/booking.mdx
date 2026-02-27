@@ -1,0 +1,167 @@
+---
+title: "Booking examples"
+description: "Code examples for booking LTL and parcel shipments."
+---
+
+## Book an LTL shipment
+
+After getting rates, book a shipment using the quote ID and your selected rate ID:
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.shippeek.com/book \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "570665116d0bfce422911668",
+    "rateId": "34575116d0afce4229116467",
+    "schedulePickup": true,
+    "originCompany": "Acme Warehouse",
+    "originAddress": "123 Main St",
+    "originContactName": "John Smith",
+    "originContactPhone": "312-555-0100",
+    "originContactEmail": "john@acme.com",
+    "originDockHoursOpen": "9:00 AM",
+    "originDockHoursClose": "5:00 PM",
+    "originReferenceNumber": "ORD-2026-001",
+    "destCompany": "West Coast Distribution",
+    "destAddress": "456 Oak Ave",
+    "destContactName": "Jane Doe",
+    "destContactPhone": "310-555-0200",
+    "destContactEmail": "jane@westcoast.com",
+    "destReferenceNumber": "PO-88421"
+  }'
+```
+
+```javascript Node.js
+const booking = await fetch('https://api.shippeek.com/book', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${process.env.SHIPPEEK_API_TOKEN}`,
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    id: '570665116d0bfce422911668',
+    rateId: '34575116d0afce4229116467',
+    schedulePickup: true,
+    originCompany: 'Acme Warehouse',
+    originAddress: '123 Main St',
+    originContactName: 'John Smith',
+    originContactPhone: '312-555-0100',
+    originContactEmail: 'john@acme.com',
+    originDockHoursOpen: '9:00 AM',
+    originDockHoursClose: '5:00 PM',
+    destCompany: 'West Coast Distribution',
+    destAddress: '456 Oak Ave',
+    destContactName: 'Jane Doe',
+    destContactPhone: '310-555-0200',
+  }),
+});
+
+const shipment = await booking.json();
+console.log(`PRO: ${shipment.dispatch.proNum}`);
+console.log(`Pickup #: ${shipment.dispatch.pickupNum}`);
+```
+
+```python Python
+import requests
+import os
+
+response = requests.post(
+    'https://api.shippeek.com/book',
+    headers={
+        'Authorization': f'Bearer {os.environ["SHIPPEEK_API_TOKEN"]}',
+    },
+    json={
+        'id': '570665116d0bfce422911668',
+        'rateId': '34575116d0afce4229116467',
+        'schedulePickup': True,
+        'originCompany': 'Acme Warehouse',
+        'originAddress': '123 Main St',
+        'originContactName': 'John Smith',
+        'originContactPhone': '312-555-0100',
+        'destCompany': 'West Coast Distribution',
+        'destAddress': '456 Oak Ave',
+        'destContactName': 'Jane Doe',
+        'destContactPhone': '310-555-0200',
+    },
+)
+
+shipment = response.json()
+print(f"PRO: {shipment['dispatch']['proNum']}")
+print(f"Pickup: {shipment['dispatch']['pickupNum']}")
+```
+</CodeGroup>
+
+## Book with custom labels
+
+Request specific label sizes and counts:
+
+```bash
+curl -X POST "https://api.shippeek.com/book?labelSize=4x6&labelCount=2" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "570665116d0bfce422911668",
+    "rateId": "34575116d0afce4229116467",
+    "schedulePickup": true,
+    "originCompany": "Acme Warehouse",
+    "originAddress": "123 Main St",
+    "originContactName": "John Smith",
+    "originContactPhone": "312-555-0100",
+    "destCompany": "West Coast Distribution",
+    "destAddress": "456 Oak Ave",
+    "destContactName": "Jane Doe",
+    "destContactPhone": "310-555-0200"
+  }'
+```
+
+Available label sizes: `2.25x4`, `3x4`, `3x5`, `3.5x5`, `4x1`, `4x2`, `4x3.3`, `4x6` (default), `4x8`, `5.5x8.5`, `8.5x11`.
+
+## Book a parcel shipment
+
+```bash
+curl -X POST https://api.shippeek.com/book/parcel \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "quote_id_from_parcel_rates",
+    "rateId": "selected_parcel_rate_id",
+    "originCompany": "Acme Warehouse",
+    "originAddress": "123 Main St",
+    "originContactName": "John Smith",
+    "originContactPhone": "312-555-0100",
+    "destCompany": "Customer",
+    "destAddress": "789 Elm St",
+    "destContactName": "Alex Johnson",
+    "destContactPhone": "415-555-0300"
+  }'
+```
+
+## Cancel a booking
+
+```bash
+curl -X POST https://api.shippeek.com/book/cancel \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bookingId": "570665116d0bfce422911668"
+  }'
+```
+
+## Booking flow summary
+
+<Steps>
+  <Step title="Get rates">
+    `POST /rates` or `POST /rates/parcel` to get a quote ID and rate options.
+  </Step>
+  <Step title="Select a rate">
+    Choose a rate from the response. Save the `id` (quote ID) and `rates[].id` (rate ID).
+  </Step>
+  <Step title="Book the shipment">
+    `POST /book` with the quote ID, rate ID, and origin/destination contact details.
+  </Step>
+  <Step title="Receive confirmation">
+    The response includes the PRO number, BOL status, pickup number, and tracking info.
+  </Step>
+</Steps>

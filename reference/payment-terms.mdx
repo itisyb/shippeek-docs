@@ -1,0 +1,20 @@
+---
+title: "Payment terms"
+description: "Shipping payment term options in ShipPeek."
+---
+
+Payment terms define who pays for the shipment and when. These are returned in the `paymentTerms` field of rate responses.
+
+## Available terms
+
+| Term | Description |
+|------|-------------|
+| `Outbound Prepaid` | Shipper pays. Most common for outbound shipments. |
+| `Outbound Collect` | Receiver pays on delivery. |
+| `Inbound Collect` | Receiver pays for inbound shipments. |
+| `Third Party Prepaid` | A third party pays in advance. |
+| `Third Party Collect` | A third party pays on delivery. |
+
+## Default behavior
+
+Most rate requests default to `Outbound Prepaid` unless your account is configured otherwise.

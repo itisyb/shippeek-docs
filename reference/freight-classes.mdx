@@ -1,0 +1,51 @@
+---
+title: "Freight classes"
+description: "Standard NMFC freight classes supported by ShipPeek."
+---
+
+ShipPeek supports the following standard NMFC (National Motor Freight Classification) freight classes. Use these values in the `freightClass` field of rate request items.
+
+## Supported classes
+
+| Class | Typical density range |
+|-------|----------------------|
+| 50 | 50+ lbs/ft3 |
+| 55 | 35-50 lbs/ft3 |
+| 60 | 30-35 lbs/ft3 |
+| 65 | 22.5-30 lbs/ft3 |
+| 70 | 15-22.5 lbs/ft3 |
+| 77.5 | 13.5-15 lbs/ft3 |
+| 85 | 12-13.5 lbs/ft3 |
+| 92.5 | 10.5-12 lbs/ft3 |
+| 100 | 9-10.5 lbs/ft3 |
+| 110 | 8-9 lbs/ft3 |
+| 125 | 7-8 lbs/ft3 |
+| 150 | 6-7 lbs/ft3 |
+| 175 | 5-6 lbs/ft3 |
+| 200 | 4-5 lbs/ft3 |
+| 250 | 3-4 lbs/ft3 |
+| 300 | 2-3 lbs/ft3 |
+| 400 | 1-2 lbs/ft3 |
+| 500 | Less than 1 lb/ft3 |
+
+## How freight class works
+
+Freight class is determined by the NMFC code assigned to your commodity. Higher class numbers indicate freight that is more expensive to ship relative to its weight (lighter, bulkier, or more fragile items).
+
+If you are unsure of the correct freight class for your commodity, consult the NMFC tariff or contact your ShipPeek representative.
+
+## Example
+
+```json
+{
+  "items": [
+    {
+      "weight": 500,
+      "freightClass": 70,
+      "description": "Machine parts",
+      "quantity": 1,
+      "package": "Pallets_48x40"
+    }
+  ]
+}
+```

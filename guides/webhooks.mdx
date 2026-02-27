@@ -1,0 +1,57 @@
+---
+title: "Webhooks"
+description: "How ShipPeek uses webhooks for account provisioning and event notifications."
+---
+
+ShipPeek uses webhooks to automate account provisioning when new users sign up through payment platforms.
+
+## Polar webhooks
+
+When a user completes a purchase through [Polar](https://polar.sh), ShipPeek automatically:
+
+1. Creates a new user account
+2. Generates API credentials (client ID + client secret)
+3. Configures default surcharge settings
+4. Sends a welcome email with API credentials via Resend
+
+This process is fully automated -- no manual account setup required.
+
+## Webhook endpoint
+
+```
+POST https://api.shippeek.com/webhooks/polar
+```
+
+This endpoint is not authenticated via Bearer token. Instead, it verifies webhook signatures to ensure requests originate from Polar.
+
+## Event flow
+
+```
+User purchases plan on Polar
+        |
+        v
+Polar sends webhook to ShipPeek
+        |
+        v
+ShipPeek verifies webhook signature
+        |
+        v
+ShipPeek creates account + API keys
+        |
+        v
+Welcome email sent with credentials
+```
+
+## Webhook security
+
+- Webhook payloads are verified using the Polar webhook signing secret
+- The endpoint is not accessible with standard API authentication
+- Failed signature verification returns `401`
+
+<Note>
+  Webhook processing is idempotent. Duplicate webhook deliveries for the same event do not create duplicate accounts.
+</Note>
+
+## Testing webhooks
+
+In development, use the Polar sandbox environment to trigger test webhook events. Configure the webhook URL to point to your local development server or a tunnel service.

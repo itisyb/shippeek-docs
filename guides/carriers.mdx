@@ -1,0 +1,74 @@
+---
+title: "Carrier guide"
+description: "Carrier-specific details, supported features, and configuration notes."
+---
+
+ShipPeek connects to carriers via their native APIs. Each carrier has different capabilities for rating, booking, tracking, and document generation.
+
+## Carrier capabilities
+
+| Carrier | SCAC | Rating | Booking | Tracking | Labels |
+|---------|------|--------|---------|----------|--------|
+| AAA Cooper / MME | `aact` | Yes | Yes | Yes | Yes |
+| CCFS | `ccfs` | Yes | Yes | Yes | Yes |
+| Dohrn Transfer | `dohr` | Yes | Yes | Yes | Yes |
+| Dugan Truck Line | `dugn` | Yes | Yes | -- | Yes |
+| Estes Express Lines | `exla` | Yes | Yes | Yes | Yes |
+| FedEx Freight | `fxfe` | Yes | Yes | Yes | Yes |
+| Magnum LTL | `mgul` | Yes | Yes | Yes | Yes |
+| Old Dominion (ODFL) | `odfl` | Yes | Yes | Yes | Yes |
+| Rossi Transportation | `rosi` | Yes | Yes | -- | Yes |
+| Saia LTL Freight | `saia` | Yes | Yes | Yes | Yes |
+| Sutton Transport | `sutn` | Yes | Yes | Yes | Yes |
+| XPO Logistics | `xpol` | Yes | Yes | Yes | Yes |
+| UPS (Parcel) | `ups` | Yes | Yes | Yes | Yes |
+| FedEx (Parcel) | `fedex_parcel` | Yes | Yes | Yes | Yes |
+
+## Filtering carriers in rate requests
+
+Pass the `carriers` query parameter to limit which carriers return rates:
+
+```bash
+curl -X POST "https://api.shippeek.com/rates?carriers=exla,saia,odfl" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ ... }'
+```
+
+Only the specified carriers are queried. Omit the parameter to get rates from all configured carriers.
+
+## LTL carrier notes
+
+### Facility type charges
+
+Location-based accessorials (residential delivery, trade show, limited access, etc.) are automatically applied based on the `originType` and `destType` fields in your rate request. You do not need to list these in the `charges` array.
+
+### Accessorials
+
+LTL accessorials are passed in the `charges` array. See the [Accessorials reference](/reference/accessorials) for the full list.
+
+<Warning>
+  `arrival notice` and `arrival schedule` are mutually exclusive. Include one or the other, not both.
+</Warning>
+
+### Hazardous materials
+
+If any item has `hazardous: true`, you must provide `emergencyName` and `emergencyPhone` in the booking request. Not all carriers support hazmat shipments -- unsupported carriers return an error status in the rate response.
+
+## Parcel carrier notes
+
+### UPS
+
+- Supports `ups`, `upgf`, and `ups_parcel` as SCAC codes
+- Ground, Express, and all standard UPS service levels are included
+- Use carrier-specific packaging types (`UPS-letter`, `UPS-pak`, etc.) to get accurate packaging rates
+
+### FedEx
+
+- Supports `fedex_parcel` and `fxfe` (which handles both LTL and parcel)
+- `indirect signature required` is only supported for residential destinations
+- Use carrier-specific packaging types (`FedEx-envelope`, `FedEx-pak`, etc.) for FedEx packaging rates
+
+## Adding carriers
+
+Carrier availability is configured per account. Contact [yash@shippeek.com](mailto:yash@shippeek.com) to add or remove carriers from your account.

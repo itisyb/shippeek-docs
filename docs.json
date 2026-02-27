@@ -1,122 +1,86 @@
 {
   "$schema": "https://mintlify.com/docs.json",
+  "name": "ShipPeek",
   "theme": "mint",
-  "name": "Mint Starter Kit",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#2563EB",
+    "light": "#60A5FA",
+    "dark": "#1E40AF"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/images/favicon.png",
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
             "group": "Getting started",
             "pages": [
-              "index",
+              "introduction",
               "quickstart",
-              "development"
+              "authentication",
+              "rate-limiting",
+              "errors"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Guides",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "guides/carriers",
+              "guides/webhooks",
+              "guides/wordpress"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Code examples",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "examples/rate-shopping",
+              "examples/booking",
+              "examples/tracking"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Reference",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "reference/accessorials",
+              "reference/carrier-codes",
+              "reference/freight-classes",
+              "reference/location-types",
+              "reference/packaging-types",
+              "reference/payment-terms"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
-        "groups": [
-          {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
-        ]
+        "tab": "API Reference",
+        "openapi": "openapi.json"
       }
+    ]
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:yash@shippeek.com"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://shippeek.com"
+  },
+  "footerSocials": {
+    "website": "https://shippeek.com"
+  },
+  "api": {
+    "baseUrl": [
+      "https://api.shippeek.com",
+      "https://api.shippeek.dev"
     ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
+    "auth": {
+      "method": "bearer"
     }
   },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+  "feedback": {
+    "thumbsRating": true
   }
 }
